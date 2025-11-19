@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tic Tac Toe - VS Computer</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #f0f0f0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+  }
+  h1 {
+    margin-bottom: 15px;
+  }
+  .board {
+    display: grid;
+    grid-template-columns: repeat(3, 100px);
+    grid-gap: 5px;
+  }
+  .cell {
+    width: 100px;
+    height: 100px;
+    background: white;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5em;
+    cursor: pointer;
+  }
+  .cell:hover {
+    background: #e8e8e8;
+  }
+  .message {
+    margin-top: 15px;
+    font-size: 1.2em;
+  }
+  button {
+    margin-top: 15px;
+    padding: 8px 15px;
+    font-size: 1em;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<h1>Tic Tac Toe 🤖</h1>
+<div class="board" id="board"></div>
+<div class="message" id="message"></div>
+<button onclick="resetGame()">Restart</button>
+
+<script>
+  const board = document.getElementById('board');
+  const message = document.getElementById('message');
+  let gameActive = true;
+  let gameState = ["", "", "", "", "", "", "", "", ""];
+  const player = 'X';
+  const computer = 'O';
+
+  const winningConditions = [
+    [0,1,2],[3,4,5],[6,7,8],
+    [0,3,6],[1,4,7],[2,5,8],
+    [0,4,8],[2,4,6]
+  ];
+
+  function createBoard() {
+    board.innerHTML = '';
+    gameState.forEach((cell, index) => {
+      const div = document.createElement('div');
+      div.classList.add('cell');
+      div.setAttribute('data-index', index);
+      div.addEventListener('click', handleCellClick);
+      div.textContent = cell;
+      board.appendChild(div);
+    });
+  }
+
+  function handleCellClick(e) {
+    const index = e.target.getAttribute('data-index');
+    if (gameState[index] !== "" || !gameActive) return;
+
+    makeMove(index, player);
+
+    if (checkWinner(player)) {
+      message.textContent = "You win! 🎉";
+      gameActive = false;
+      return;
+    }
+
+    if (isDraw()) {
+      message.textContent = "It's a draw! 🤝";
+      gameActive = false;
+      return;
+    }
+
+    message.textContent = "Computer's turn...";
+    setTimeout(computerMove, 500);
+  }
+
+  function makeMove(index, symbol) {
+    gameState[index] = symbol;
+    document.querySelector(`[data-index='${index}']`).textContent = symbol;
+  }
+
+  function computerMove() {
+    if (!gameActive) return;
+
+    // Try to win
+    let move = findBestMove(computer);
+    // Block player
+    if (move === null) move = findBestMove(player);
+    // Pick random
+    if (move === null) {
+      const emptyCells = gameState.map((v, i) => v === "" ? i : null).filter(v => v !== null);
+      move = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+    }
+
+    makeMove(move, computer);
+
+    if (checkWinner(computer)) {
+      message.textContent = "Computer wins! 🤖";
+      gameActive = false;
+      return;
+    }
+
+    if (isDraw()) {
+      message.textContent = "It's a draw! 🤝";
+      gameActive = false;
+      return;
+    }
+
+    message.textContent = "Your turn!";
+  }
+
+  function findBestMove(symbol) {
+    for (const condition of winningConditions) {
+      const [a, b, c] = condition;
+      const line = [gameState[a], gameState[b], gameState[c]];
+      if (line.filter(x => x === symbol).length === 2 && line.includes("")) {
+        return condition[line.indexOf("")];
+      }
+    }
+    return null;
+  }
+
+  function checkWinner(symbol) {
+    return winningConditions.some(([a, b, c]) =>
+      gameState[a] === symbol && gameState[b] === symbol && gameState[c] === symbol
+    );
+  }
+
+  function isDraw() {
+    return !gameState.includes("");
+  }
+
+  function resetGame() {
+    gameState = ["", "", "", "", "", "", "", "", ""];
+    gameActive = true;
+    message.textContent = "Your turn!";
+    createBoard();
+  }
+
+  // Initialize
+  createBoard();
+  message.textContent = "Your turn!";
+</script>
+
+</body>
+</html>
